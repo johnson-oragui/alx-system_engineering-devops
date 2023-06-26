@@ -1,17 +1,20 @@
 #!/usr/bin/env bash
 # Using puppet to connect without password
 
-file_line { 'Turn off passwd auth':
-  path  => '/etc/ssh/sshd_config',
-  line  => 'PasswordAuthentication no',
+package { 'augeas-tools':
+  ensure => installed,
 }
 
-file_line { 'Declare identity file':
-  path  => '/etc/ssh/ssh_config',
-  line  => 'IdentityFile ~/.ssh/school',
+augeas { 'Turn off passwd auth':
+  context => '/files/etc/ssh/sshd_config',
+  changes => [
+    'set #comment[.="*PasswordAuthentication*"]/../PasswordAuthentication no',
+  ],
 }
 
-service { 'ssh':
-  ensure => 'running',
-  enable => true,
+augeas { 'Declare identity file':
+  context => '/files/etc/ssh/ssh_config',
+  changes => [
+    'set #comment[.="*IdentityFile*"]/../IdentityFile ~/.ssh/school',
+  ],
 }
