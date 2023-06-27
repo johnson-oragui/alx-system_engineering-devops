@@ -1,25 +1,29 @@
 #!/usr/bin/env bash
 # Installs Nginx with the following configurations:
-#    Listens on port 80.
-#    Returns a page containing "Hello World!" when queried
-#    at the root with a curl GET request.
+#+    Listens on port 80.
+#+    Returns a page containing "Hello World!" when queried
+#++    at the root with a curl GET request.
 
-# Update system packages
-sudo apt update
+#  updates the package lists for available software packages.
+apt-get update
+# installs the Nginx web server.
+apt-get install -y nginx
 
-# Install Nginx
-sudo apt install -y nginx
+# Creates the /etc/nginx/html directory, which will serve as the document root directory for Nginx.
+mkdir /etc/nginx/html
+#  creates an empty index.html file inside the /etc/nginx/html directory.
+touch /etc/nginx/html/index.html
+#  sets the content of the index.html file to "Hello World!" using the echo command.
+echo "Hello World!" > /etc/nginx/html/index.html
+# Sets Nginx to listen on port 80 and serve files from the /etc/nginx/html directory.
+cat > /etc/nginx/sites-available/default << EOF
+server {
+    listen      80 default_server;
+    listen      [::]:80 default_server;
+    root        /etc/nginx/html;
+    index       index.html index.htm;
+}
+EOF
 
-# Configure Nginx to listen on port 80
-sudo sed -i 's/listen 80 default_server;/listen 80;/' /etc/nginx/sites-available/default
-
-# Restart Nginx
-sudo service nginx restart
-
-# Create an HTML file with "Hello World!" content
-echo "Hello World!" | sudo tee /var/www/html/index.html > /dev/null
-
-# Verify Nginx is running and serving the correct content
-curl localhost
-
-exit 0
+# Restarts the Nginx service to apply the configuration changes.
+service nginx restart
