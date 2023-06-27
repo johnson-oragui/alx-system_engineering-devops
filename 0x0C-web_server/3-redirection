@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# Configures an Nginx server so that /redirect_me redirects to another page.
+# The redirection is configured as a "301 Moved Permanently"
+
+# updates the package lists for available software packages.
+apt-get update
+#  installs the Nginx web server.
+apt-get install -y nginx
+
+# creates the directory /etc/nginx/html, which will serve as the document root directory for Nginx.
+mkdir /etc/nginx/html
+#  creates an empty file named index.html inside the /etc/nginx/html directory.
+touch /etc/nginx/html/index.html
+#  writes the string "Hello World!" to the index.html file using the echo command.
+echo "Hello World!" > /etc/nginx/html/index.html
+#  creates the Nginx configuration file at /etc/nginx/sites-available/default.
+printf %s "server {
+    listen 80;
+    listen [::]:80 default_server;
+    root   /etc/nginx/html;
+    index  index.html index.htm;
+
+    location /redirect_me {
+        return 301 http://cuberule.com/;
+    }
+}" > /etc/nginx/sites-available/default
+
+#  restarts the Nginx service to apply the changes made in the configuration file.
+service nginx restart

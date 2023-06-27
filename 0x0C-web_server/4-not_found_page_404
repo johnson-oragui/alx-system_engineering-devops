@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# Installs Nginx with the following configurations:
+#+    Listens on port 80.
+#+    Returns a page containing "Hello World!"
+#+     at the root with a curl GET request.
+# Configures /redirect_me as a "301 Moved Permanently".
+# Includes a custom 404 page containing "Ceci n'est pas une page".
+
+# updates the package lists for available software packages.
+apt-get update
+#  installs the Nginx web server.
+apt-get install -y nginx
+
+#  creates the directory /etc/nginx/html, which will serve as the document root directory for Nginx.
+mkdir /etc/nginx/html
+#  creates an empty file named index.html inside the /etc/nginx/html directory.
+touch /etc/nginx/html/index.html
+#  writes the string "Hello World!" to the index.html file using the echo command.
+echo "Hello World!" > /etc/nginx/html/index.html
+#  creates an empty file named 404.html inside the /etc/nginx/html directory.
+touch /etc/nginx/html/404.html
+# writes the string "Ceci n'est pas une page" to the 404.html file using the echo command.
+echo "Ceci n'est pas une page" > /etc/nginx/html/404.html
+#  creates the Nginx configuration file at /etc/nginx/sites-available/default.
+printf %s "server {
+    listen 80;
+    listen [::]:80 default_server;
+    root   /etc/nginx/html;
+    index  index.html index.htm;
+
+    location /redirect_me {
+        return 301 http://cuberule.com/;
+    }
+
+    error_page 404 /404.html;
+    location /404 {
+      root /etc/nginx/html;
+      internal;
+    }
+}" > /etc/nginx/sites-available/default
+
+#  restarts the Nginx service to apply the changes made in the configuration file.
+service nginx restart
