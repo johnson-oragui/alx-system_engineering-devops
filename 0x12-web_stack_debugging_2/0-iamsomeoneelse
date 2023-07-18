@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+# Check if an argument is provided
+if [ -z "$1" ]; then
+  echo "Please provide a username as an argument."
+  exit 1
+fi
+
+username="$1"
+
+# Check if the user exists
+if ! id -u "$username" >/dev/null 2>&1; then
+  echo "User '$username' does not exist."
+  exit 1
+fi
+
+# Switch to the specified user and run the 'whoami' command
+su - "$username" -c 'whoami'
+
