@@ -1,45 +1,33 @@
 #!/usr/bin/env bash
-# configures Nginx to run as the nginx user
+# Fixes a web server to run Nginx as the nginx user listening on port 8080.
 
-# Install Nginx if it's not already installed
-if ! command -v nginx >/dev/null 2>&1; then
-    apt-get update
-    apt-get install -y nginx
+# Stop the currently running Nginx service
+service nginx stop
+
+# Create a new nginx user if it doesn't exist
+if ! id -u nginx >/dev/null 2>&1; then
+    adduser --system --no-create-home --disabled-login --disabled-password --group nginx
 fi
 
-# create user nginx
-sudo useradd -r nginx
-
-# create the home directory for the "nginx" user
-sudo mkdir /home/nginx
-
-# set the appropriate ownership and permissions. 
-sudo chown nginx:nginx /home/nginx
-
-# Set the correct ownership and permissions on the Nginx directories
-sudo chown -R nginx:nginx /var/log/nginx /var/lib/nginx
-
-# Stop Nginx if it's already running
-sudo service nginx stop
-
-# Update Nginx configuration to run as "nginx" user
-sudo sed -i 's/user www-data;/user nginx;/g' /etc/nginx/nginx.conf
+# Update Nginx configuration to run as nginx user
+sed -i 's/user\s*\(.*\);/user nginx;/' /etc/nginx/nginx.conf
 
 # Check if Nginx is running on port 80
 if netstat -tuln | grep ':80' >/dev/null; then
     # Check if Nginx is not already running on port 8080
     if ! netstat -tuln | grep ':8080' >/dev/null; then
+        # Check if another process is using port 8080 and terminate it
+        if lsof -i :8080 >/dev/null; then
+            kill $(lsof -t -i :8080)
+            sleep 1
+        fi
         # Configure Nginx to listen on port 8080
-        sudo sed -i "s/80/8080/g" /etc/nginx/sites-available/default
-        chmod 644 /etc/nginx/nginx.conf
+        sudo sed -i 's/80 default_server/8080 default_server/' /etc/nginx/sites-available/default
+        sudo sed -i 's/listen\s*\(.*\);/listen [::]:8080;/' /etc/nginx/sites-available/default
+        sudo chmod 644 /etc/nginx/sites-available/default
         sudo service nginx restart
     fi
 fi
 
-# Stop Apache if it's running
-if pgrep apache2 >/dev/null; then
-    sudo service apache2 stop
-fi
-
-# Restart Nginx
-sudo service nginx start
+# Start the Nginx service
+service nginx start
