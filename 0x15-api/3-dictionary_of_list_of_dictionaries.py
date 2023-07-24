@@ -1,52 +1,37 @@
 #!/usr/bin/python3
-""" Exports to-do list information of all employees to JSON format.
+"""
+Exports to-do list information of all employees to JSON format.
+
+This script fetches the user information and to-do lists for all employees
+from the JSONPlaceholder API and exports the data to a JSON file.
 """
 
 import json
 import requests
 
 
-def export_all_employees_todos():
-    url = "https://jsonplaceholder.typicode.com/"
-    all_employees_data = {}
-
-    # Fetch all users
-    users_response = requests.get(url + "users")
-    if users_response.status_code != 200:
-        print("Error: Failed to fetch user data.")
-        return
-
-    users_data = users_response.json()
-
-    # Fetch todos for each employee
-    for user in users_data:
-        employee_id = user['id']
-        employee_name = user['name']
-
-        todos_response = requests.get(url + "todos",
-                                      params={"userId": employee_id})
-        if todos_response.status_code != 200:
-            print("Error: Failed to fetch TODO list for employee ID:",
-                  employee_id)
-            continue
-
-        todos_data = todos_response.json()
-        employee_todos = [
-            {
-                "username": employee_name,
-                "task": task['title'],
-                "completed": task['completed']
-            }
-            for task in todos_data
-        ]
-
-        all_employees_data[str(employee_id)] = employee_todos
-
-    # Export to JSON
-    json_filename = "todo_all_employees.json"
-    with open(json_filename, mode='w') as jsonfile:
-        json.dump(all_employees_data, jsonfile, indent=4)
-
-
 if __name__ == "__main__":
-    export_all_employees_todos()
+    # Base URL for the JSONPlaceholder API
+    url = "https://jsonplaceholder.typicode.com/"
+
+    # Fetch the list of all users (employees)
+    users = requests.get(url + "users").json()
+
+    # Create a dictionary containing to-do list information of all employees
+    params = {"userId": u.get("id")}
+
+    data_to_export = {
+        u.get("id"): [
+            {
+                "task": t.get("title"),
+                "completed": t.get("completed"),
+                "username": u.get("username")
+            }
+            for t in requests.get(url + "todos", params).json()
+        ]
+        for u in users
+    }
+
+    # Write the data to a JSON file
+    with open("todo_all_employees.json", "w") as jsonfile:
+        json.dump(data_to_export, jsonfile, indent=4)
