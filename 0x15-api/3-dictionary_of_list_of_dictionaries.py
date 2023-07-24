@@ -2,8 +2,8 @@
 """ Exports to-do list information of all employees to JSON format.
 """
 
-import requests
 import json
+import requests
 
 
 def export_all_employees_todos():
@@ -23,9 +23,11 @@ def export_all_employees_todos():
         employee_id = user['id']
         employee_name = user['name']
 
-        todos_response = requests.get(url + "todos", params={"userId": employee_id})
+        todos_response = requests.get(url + "todos",
+                                      params={"userId": employee_id})
         if todos_response.status_code != 200:
-            print("Error: Failed to fetch TODO list for employee ID:", employee_id)
+            print("Error: Failed to fetch TODO list for employee ID:",
+                  employee_id)
             continue
 
         todos_data = todos_response.json()
@@ -46,6 +48,7 @@ def export_all_employees_todos():
         json.dump(all_employees_data, jsonfile, indent=4)
 
     print("Data exported to:", json_filename)
+
 
 if __name__ == "__main__":
     export_all_employees_todos()
