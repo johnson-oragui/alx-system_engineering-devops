@@ -1,8 +1,10 @@
 #!/usr/bin/python3
-"""Exports to-do list information of all employees to JSON format."""
+""" Exports to-do list information of all employees to JSON format.
+"""
 
 import requests
 import json
+
 
 def export_all_employees_todos():
     url = "https://jsonplaceholder.typicode.com/"
