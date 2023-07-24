@@ -10,7 +10,6 @@ import csv
 import requests
 import sys
 
-
 if __name__ == "__main__":
     # Get the employee ID from the command-line argument
     user_id = sys.argv[1]
@@ -34,5 +33,4 @@ if __name__ == "__main__":
 
         # Write each to-do list item as a row in the CSV file
         for t in todos:
-            writer.writerow([user_id, username, t.get("completed"),
-                            t.get("title")])
+            writer.writerow([user_id, username, t.get("completed"), t.get("title")])
