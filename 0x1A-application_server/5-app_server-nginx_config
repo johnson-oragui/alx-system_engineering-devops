@@ -30,7 +30,7 @@ erver {
 
     # Serve static content for AirBnB_clone_v4
     location /static {
-        proxy_pass http://127.0.0.1:5003;
+        alias web_dynamic/static/;
     }
 
     error_page 404 /404.html;
