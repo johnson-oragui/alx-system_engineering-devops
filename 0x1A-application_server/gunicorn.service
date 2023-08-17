@@ -13,9 +13,9 @@ ExecStart=gunicorn --workers 3 --bind 0.0.0.0:5003 web_dynamic.2-hbnb:app
 # Restart the service if it fails
 Restart=always
 # Redirect standard output to syslog
-StandardOutput=syslog
+StandardOutput=append:/tmp/airbnb-access.log
 # Redirect standard error to syslog
-StandardError=syslog
+StandardError=append:/tmp/airbnb-error.log
 # Identifier for syslog messages
 SyslogIdentifier=gunicorn
 
