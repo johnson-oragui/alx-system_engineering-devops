@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Gracefully reloads all Gunicorn master processes.
+
+echo "Starting Gunicorn reload..."
+
+# Find all Gunicorn master processes
+master_pids=$(ps aux | grep 'gunicorn: master' | grep -v grep | awk '{ print $2 }')
+
+# Loop through each master process and send HUP signal
+for pid in $master_pids; do
+    echo "Reloading Gunicorn master process $pid..."
+    # Send the HUP signal to gracefully reload the master process
+    kill -HUP "$pid"
+    # Wait for 1 second before proceeding to the next process
+    sleep 1
+done
+
+echo "Gunicorn reload complete."
