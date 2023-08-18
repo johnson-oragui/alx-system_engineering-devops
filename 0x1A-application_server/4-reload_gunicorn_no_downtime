@@ -17,10 +17,6 @@ done
 
 # Wait for old workers to finish processing
 echo "Waiting for old workers to finish processing..."
-sleep 10
-
-# Start new workers with updated code/configuration
-#echo "Starting new workers..."
-#/usr/local/bin/gunicorn -c ~/config/gunicorn_config.py web_flask.0-hello_route:app
+sleep 5
 
 echo "Graceful reload complete"
