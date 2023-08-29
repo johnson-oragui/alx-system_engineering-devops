@@ -1,4 +1,6 @@
-ckage index
+#!/usr/bin/env bash
+
+# Update pckage index
 sudo apt update
 
 # Install nginx
