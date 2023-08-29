@@ -1,29 +1,43 @@
-#!/usr/bin/env bash
-# Configures an Nginx server so that /redirect_me redirects to another page.
-# The redirection is configured as a "301 Moved Permanently"
+ckage index
+sudo apt update
 
-# updates the package lists for available software packages.
-apt-get update
-#  installs the Nginx web server.
-apt-get install -y nginx
+# Install nginx
+sudo apt install -y nginx
 
-# creates the directory /etc/nginx/html, which will serve as the document root directory for Nginx.
-mkdir /etc/nginx/html
-#  creates an empty file named index.html inside the /etc/nginx/html directory.
-touch /etc/nginx/html/index.html
-#  writes the string "Hello World!" to the index.html file using the echo command.
-echo "Hello World!" > /etc/nginx/html/index.html
-#  creates the Nginx configuration file at /etc/nginx/sites-available/default.
-printf %s "server {
+# Configure nginx to listen on port 80
+sudo sed -i 's/listen\s*80;/listen 80 default_server;/g' /etc/nginx/sites-available/default
+
+# Restart nginx
+sudo service nginx restart
+
+# Create a temporary index.html file with "Hello World!"
+echo "Hello World!" | sudo tee /var/www/html/index.html
+
+# Display script completion message
+echo "Nginx installation and configuration completed."
+
+# Create a configuration file for the redirection
+echo "server {
     listen 80;
     listen [::]:80 default_server;
-    root   /etc/nginx/html;
-    index  index.html index.htm;
+    
+    root /var/www/html;
+
+    # Add index.php to the list if you are using PHP
+    index index.html index.htm index.nginx-debian.html;
 
     location /redirect_me {
-        return 301 http://cuberule.com/;
+        return 301 https://www.youtube.com/watch?v=QH2-TGUlwu4;
     }
-}" > /etc/nginx/sites-available/default
 
-#  restarts the Nginx service to apply the changes made in the configuration file.
-service nginx restart
+}" | sudo tee /etc/nginx/sites-available/default
+
+# Enable the new site configuration
+sudo ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/
+
+# Test nginx configuration and reload
+sudo nginx -t
+sudo service nginx reload
+
+# Display script completion message
+echo "Nginx redirection configuration completed."
