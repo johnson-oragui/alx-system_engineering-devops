@@ -1,30 +1,41 @@
-#!/usr/bin/env bash
-# Configures an Nginx server so that /redirect_me redirects to another page.
-# The redirection is configured as a "301 Moved Permanently"
+nstalls Nginx with the following configurations:
+#+    Listens on port 80.
+#+    Returns a page containing "Hello World!" when queried
+#++    at the root with a curl GET request.
+#++    Redirects requests to the /redirect_me path to "https://www.youtube.com/watch?v=QH2-TGUlwu4" with a 301 Moved Permanently response.
 
-# Update pckage index
+# Update package index
 sudo apt update
 
-# Install nginx
+# Install Nginx
 sudo apt install -y nginx
 
-# Configure nginx to listen on port 80
+# Configure Nginx to listen on port 80
 sudo sed -i 's/listen\s*80;/listen 80 default_server;/g' /etc/nginx/sites-available/default
 
-# Restart nginx
+# Restart Nginx
 sudo service nginx restart
 
-# Create a temporary index.html file with "Hello World!"
-echo "Hello World!" | sudo tee /var/www/html/index.html
+# Create the /etc/nginx/html directory as the document root
+sudo mkdir /etc/nginx/html
 
-# Display script completion message
-echo "Nginx installation and configuration completed."
+# Create an empty index.html file with "Hello World!"
+echo "Hello World!" | sudo tee /etc/nginx/html/index.html
 
-# Create a configuration file for the redirection
+# Configure the default Nginx site to serve content from /etc/nginx/html
+printf %s "server {
+     listen      80 default_server;
+     listen      [::]:80 default_server;
+     root        /etc/nginx/html;
+     index       index.html index.htm;
+}
+" | sudo tee /etc/nginx/sites-available/default
+
+# Configure a new server block for redirection
 echo "server {
     listen 80;
     listen [::]:80 default_server;
-    
+
     root /var/www/html;
 
     # Add index.php to the list if you are using PHP
@@ -33,15 +44,15 @@ echo "server {
     location /redirect_me {
         return 301 https://www.youtube.com/watch?v=QH2-TGUlwu4;
     }
-
-}" | sudo tee /etc/nginx/sites-available/default
+}" | sudo tee /etc/nginx/sites-available/redirect
 
 # Enable the new site configuration
-sudo ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/redirect /etc/nginx/sites-enabled/
 
-# Test nginx configuration and reload
+# Test Nginx configuration and reload
 sudo nginx -t
 sudo service nginx reload
 
 # Display script completion message
-echo "Nginx redirection configuration completed."
+echo "Nginx installation and configuration completed."
+
