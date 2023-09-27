@@ -3,20 +3,25 @@
 # The redirection is configured as a "301 Moved Permanently"
 # Includes a custom 404 page containing "Ceci n'est pas une page".
 
-# Update package index
-sudo apt update
+#  updates the package lists for available software packages.
+apt-get update
+# installs the Nginx web server.
+apt-get install -y nginx
 
-# Install nginx
-sudo apt install -y nginx
-
-# Configure nginx to listen on port 80
-sudo sed -i 's/listen\s*80;/listen 80 default_server;/g' /etc/nginx/sites-available/default
-
-# Restart nginx
-sudo service nginx restart
-
-# Create a temporary index.html file with "Hello World!"
-echo "Hello World!" | sudo tee /var/www/html/index.html
+# Creates the /etc/nginx/html directory, which will serve as the document root directory for Nginx.
+mkdir /etc/nginx/html
+#  creates an empty index.html file inside the /etc/nginx/html directory.
+touch /etc/nginx/html/index.html
+#  sets the content of the index.html file to "Hello World!" using the echo command.
+echo "Hello World!" > /etc/nginx/html/index.html
+# Sets Nginx to listen on port 80 and serve files from the /etc/nginx/html directory.
+printf %s "server {
+     listen      80;
+     listen      [::]:80 default_server;
+     root        /etc/nginx/html;
+     index       index.html index.htm;
+}
+" > /etc/nginx/sites-available/default
 
 #  creates an empty file named 404.html inside the /etc/nginx/html directory.
 touch /etc/nginx/html/404.html
@@ -55,6 +60,3 @@ sudo ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/
 # Test nginx configuration and reload
 sudo nginx -t
 sudo service nginx reload
-
-# Display script completion message
-echo "Nginx redirection configuration completed."
