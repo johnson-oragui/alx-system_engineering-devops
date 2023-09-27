@@ -1,77 +1,48 @@
 #!/usr/bin/env bash
-#nstalls Nginx with the following configurations:
-# - Listens on port 80.
-# - Returns a page containing "Hello World!" when queried
-#   at the root with a curl GET request.
-# - Redirects requests to the /redirect_me path to "https://www.youtube.com/watch?v=QH2-TGUlwu4" with a 301 Moved Permanently response.
+# Installs Nginx with the following configurations:
+#+    Listens on port 80.
+#+    Returns a page containing "Hello World!" when queried
+#++    at the root with a curl GET request.
 
-# Function to check if a file exists
-file_exists() {
-    [ -e "$1" ]
+#  updates the package lists for available software packages.
+apt-get update
+# installs the Nginx web server.
+apt-get install -y nginx
+
+# Creates the /etc/nginx/html directory, which will serve as the document root directory for Nginx.
+mkdir /etc/nginx/html
+#  creates an empty index.html file inside the /etc/nginx/html directory.
+touch /etc/nginx/html/index.html
+#  sets the content of the index.html file to "Hello World!" using the echo command.
+echo "Hello World!" > /etc/nginx/html/index.html
+# Sets Nginx to listen on port 80 and serve files from the /etc/nginx/html directory.
+printf %s "server {
+     listen      80;
+     listen      [::]:80 default_server;
+     root        /etc/nginx/html;
+     index       index.html index.htm;
 }
+" > /etc/nginx/sites-available/default
 
-# Update package index if not already updated
-if ! file_exists /etc/apt/sources.list.d/nginx.list; then
-    sudo apt update
-fi
+# Configure a new server block for redirection
+echo "server {
+    listen 80;
+    listen [::]:80;
 
-# Install Nginx if not already installed
-if ! dpkg -l | grep -q nginx; then
-    sudo apt install -y nginx
-fi
+    root /var/www/html;
 
-# Configure Nginx to listen on port 80 if not already configured
-if ! grep -q "listen 80 default_server;" /etc/nginx/sites-available/default; then
-    sudo sed -i 's/listen\s*80;/listen 80 default_server;/g' /etc/nginx/sites-available/default
-    sudo service nginx restart
-fi
+    # Add index.php to the list if you are using PHP
+    index index.html index.htm index.nginx-debian.html;
 
-# Create the /etc/nginx/html directory as the document root if not already created
-if ! file_exists /etc/nginx/html; then
-    sudo mkdir /etc/nginx/html
-fi
-
-# Create an empty index.html file with "Hello World!" if not already created
-if ! file_exists /etc/nginx/html/index.html; then
-    echo "Hello World!" | sudo tee /etc/nginx/html/index.html
-fi
-
-# Configure the default Nginx site to serve content from /etc/nginx/html if not already configured
-if ! grep -q "root /etc/nginx/html;" /etc/nginx/sites-available/default; then
-    printf %s "server {
-         listen      80 default_server;
-         listen      [::]:80 default_server;
-         root        /etc/nginx/html;
-         index       index.html index.htm;
+    location /redirect_me {
+        return 301 https://www.youtube.com/watch?v=QH2-TGUlwu4;
     }
-    " | sudo tee /etc/nginx/sites-available/default
-fi
+}" | sudo tee /etc/nginx/sites-available/redirect
 
-# Configure a new server block for redirection if not already configured
-if ! file_exists /etc/nginx/sites-available/redirect; then
-    echo "server {
-        listen 80;
-        listen [::]:80;
+# Enable the new site configuration
+sudo ln -s /etc/nginx/sites-available/redirect /etc/nginx/sites-enabled/
 
-        root /var/www/html;
-
-        # Add index.php to the list if you are using PHP
-        index index.html index.htm index.nginx-debian.html;
-
-        location /redirect_me {
-            return 301 https://www.youtube.com/watch?v=QH2-TGUlwu4;
-        }
-    }" | sudo tee /etc/nginx/sites-available/redirect
-fi
-
-# Enable the new site configuration if not already enabled
-if ! file_exists /etc/nginx/sites-enabled/redirect; then
-    sudo ln -s /etc/nginx/sites-available/redirect /etc/nginx/sites-enabled/
-fi
 
 # Test Nginx configuration and reload
 sudo nginx -t
 sudo service nginx reload
-
-# Display script completion message
-echo "Nginx installation and configuration completed."
