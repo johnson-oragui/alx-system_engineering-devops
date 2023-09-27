@@ -16,9 +16,8 @@ touch /etc/nginx/html/index.html
 echo "Hello World!" > /etc/nginx/html/index.html
 # Sets Nginx to listen on port 80 and serve files from the /etc/nginx/html directory.
 printf %s "server {
-     listen      80;
+     listen      80 default_server;
      listen      [::]:80 default_server;
-     server_name _;
      root        /etc/nginx/html;
      index       index.html index.htm;
 }
@@ -35,11 +34,10 @@ echo "Nginx installation and configuration completed."
 
 # Create a configuration file for the redirection
 echo "server {
-    listen 80;
-    listen [::]:80;
-    server_name _;
-    
-    root /etc/nginx/html;
+    listen      80;
+    listen      [::]:80;
+    root        /etc/nginx/html;
+    index       index.html index.htm;
 
     # Add index.php to the list if you are using PHP
     index index.html index.htm index.nginx-debian.html;
