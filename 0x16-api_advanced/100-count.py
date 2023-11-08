@@ -12,8 +12,6 @@ def count_words(subreddit, word_list, instances={}, after="", count=0):
         hot articles, and prints a sorted count of given keywords
     """
     base_url = "https://www.reddit.com"
-    # print statement for debugging
-    # print(f"{after = }")
 
     end_point = f"/r/{subreddit}/hot/.json"
 
@@ -31,9 +29,9 @@ def count_words(subreddit, word_list, instances={}, after="", count=0):
 
     if response.status_code == 200:
         data = response.json()
-
-        after = data['data']['after']
-        count = data.get('dist')
+        if 'after' in data['data']:
+            after = data['data']['after']
+        count = data['data']['dist']
         posts = data['data']['children']
 
         title = [post['data']['title'] for post in posts]
@@ -45,6 +43,11 @@ def count_words(subreddit, word_list, instances={}, after="", count=0):
 
         if after:
             count_words(subreddit, word_list, instances, after, count)
+        else:
+            sorted_instances = sorted(instances.items(),
+                                      key=lambda item: (-item[1], item[0]))
+            for word, count in sorted_instances:
+                print("{}: {}".format(word, count))
     else:
         print()
         return
@@ -52,14 +55,7 @@ def count_words(subreddit, word_list, instances={}, after="", count=0):
     if len(instances) == 0:
         print()
         return
-    # print statement for debugging
-    # print(f"{after = }")
 
-    sorted_instances = sorted(instances.items(),
-                              key=lambda item: (-item[1], item[0]))
-
-    for word, count in sorted_instances:
-        print("{}: {}".format(word, count))
     return instances
 
 
@@ -71,6 +67,7 @@ def count_words_in_title(titles, word_list):
     word_count = {}
 
     for title in titles:
+        title = title.lower()
         words = title.split()
 
         for word in words:
