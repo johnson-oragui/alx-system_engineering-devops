@@ -1,91 +1,67 @@
 #!/usr/bin/python3
-"""
-Script to count words in all hot posts of a given Reddit subreddit.
-"""
+"""Function to count words in all hot posts of a given Reddit subreddit."""
 
 import requests
+import sys
 
 
-def count_words(subreddit, word_list, instances={}, after="", count=0):
-    """
-    Prints counts of given words found in hot posts of a given subreddit.
+def count_words(subreddit, word_list, instances={}, after=None, count=0):
+    base_url = "https://www.reddit.com"
 
-    Args:
-        subreddit (str): The subreddit to search.
-        word_list (list): The list of words to search for in post titles.
-        instances (dict): Key/value pairs of words/counts.
-        after (str): The parameter for the next page of the API results.
-        count (int): The parameter of results matched thus far.
-    """
-    # Construct the URL for the subreddit's hot posts in JSON format
-    url = "https://www.reddit.com/r/{}/hot/.json".format(subreddit)
+    end_point = f"/r/{subreddit}/hot/.json"
 
-    # Define headers for the HTTP request, including User-Agent
-    headers = {
-        "User-Agent": "linux:0x16.api.advanced:v1.0.0 (by /u/bdov_)"
-    }
+    headers = {"User-Agent": "hp:0x16.api.advanced:v1.0.0"}
 
-    # Define parameters for the request, including pagination and limit
-    params = {
-        "after": after,
-        "count": count,
-        "limit": 100
-    }
+    params = {"limit": 100}
+    if after:
+        params['after'] = after
+        params['count'] = count
 
-    # Send a GET request to the subreddit's hot posts page
-    response = requests.get(url, headers=headers, params=params,
-                            allow_redirects=False)
+    response = requests.get(base_url + end_point,
+                            headers=headers, params=params)
 
-    try:
-        # Parse the JSON response and check for a not-found error
-        results = response.json()
-        if response.status_code == 404:
-            raise Exception
-    except Exception:
-        # Handle errors or empty results
-        print("")
-        return
+    if response.status_code == 200:
+        data = response.json()
 
-    # Extract data from the JSON response
-    results = results.get("data")
-    after = results.get("after")
-    count += results.get("dist")
+        after = data.get('after')
+        count = data.get('dist')
+        posts = data['data']['children']
 
-    # Iterate through the posts and count occurrences of words
-    for c in results.get("children"):
-        # Extract the title of the current post,
-        #   convert to lowercase, and split into words
-        title = c.get("data").get("title").lower().split()
+        title = [post['data']['title'] for post in posts]
 
-        # Iterate through each word in the word_list
-        for word in word_list:
-            # If the lowercase version of
-            #   the current word is present in the title
-            if word.lower() in title:
-                # Count the occurrences of the current word in the title
-                times = len([t for t in title if t == word.lower()])
+        word_count = count_words_in_title(title, word_list)
 
-                # If an entry for the word exists in the instances dictionary
-                if instances.get(word) is None:
-                    # If not, initialize an entry with the times value
-                    instances[word] = times
-                else:
-                    # else add the times value to the existing count
-                    instances[word] += times
+        for word in word_count:
+            instances[word] = instances.get(word, 0) + word_count[word]
 
-    # If no more pages, print the word count results
-    if after is None:
-        # Check if the instances dictionary is empty
-        if len(instances) == 0:
-            # Print an empty line and return if no word counts were found
-            print("")
-            return
-        # Sort the instances dictionary by values in descending order,
-        #   then by keys
-        instances = sorted(instances.items(), key=lambda kv: (-kv[1], kv[0]))
-
-        # Print the sorted word counts in the format "word: count"
-        [print("{}: {}".format(k, v)) for k, v in instances]
+        if after:
+            count_words(subreddit, word_list, instances, after, count)
     else:
-        # If more pages, recursively call the function with updated parameters
-        count_words(subreddit, word_list, instances, after, count)
+        print("Request failed with status code: {}".format(response.status_code))  # noqa
+
+    sorted_instances = sorted(instances.items(),
+                              key=lambda item: (-item[1], item[0]))
+
+    for word, count in sorted_instances:
+        print("{}: {}".format(word, count))
+    return instances
+
+
+def count_words_in_title(titles, word_list):
+    word_count = {}
+    for title in titles:
+        title = title.lower()
+        words = title.split()
+
+        for word in words:
+            if word in word_list:
+                word_count[word] = word_count.get(word, 0) + 1
+    return word_count
+
+
+if __name__ == "__main__":
+    if len(sys.argv) < 3:
+        print("Usage: {} <subreddit> <list of keywords>".format(sys.argv[0]))
+        print("Ex: {} programming 'python java javascript'".format(sys.argv[0]))  # noqa
+    else:
+        result = count_words(sys.argv[1], [x for x in sys.argv[2].split()])
