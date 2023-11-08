@@ -1,29 +1,38 @@
 #!/usr/bin/python3
-"""Function to count words in all hot posts of a given Reddit subreddit."""
-
+"""
+Function to count words in all hot posts of a given Reddit subreddit.
+"""
 import requests
 import sys
 
 
-def count_words(subreddit, word_list, instances={}, after=None, count=0):
+def count_words(subreddit, word_list, instances={}, after="", count=0):
+    """
+    Recursive function that queries the Reddit API, parses the title of all
+        hot articles, and prints a sorted count of given keywords
+    """
     base_url = "https://www.reddit.com"
+    # print statement for debugging
+    # print(f"{after = }")
 
     end_point = f"/r/{subreddit}/hot/.json"
 
     headers = {"User-Agent": "hp:0x16.api.advanced:v1.0.0"}
 
-    params = {"limit": 100}
-    if after:
-        params['after'] = after
-        params['count'] = count
+    params = {
+        "after": after,
+        "count": count,
+        "limit": 100
+    }
 
     response = requests.get(base_url + end_point,
-                            headers=headers, params=params)
+                            headers=headers, params=params,
+                            allow_redirects=False)
 
     if response.status_code == 200:
         data = response.json()
 
-        after = data.get('after')
+        after = data['data']['after']
         count = data.get('dist')
         posts = data['data']['children']
 
@@ -37,7 +46,14 @@ def count_words(subreddit, word_list, instances={}, after=None, count=0):
         if after:
             count_words(subreddit, word_list, instances, after, count)
     else:
-        print("Request failed with status code: {}".format(response.status_code))  # noqa
+        print()
+        return
+
+    if len(instances) == 0:
+        print()
+        return
+    # print statement for debugging
+    # print(f"{after = }")
 
     sorted_instances = sorted(instances.items(),
                               key=lambda item: (-item[1], item[0]))
@@ -48,9 +64,13 @@ def count_words(subreddit, word_list, instances={}, after=None, count=0):
 
 
 def count_words_in_title(titles, word_list):
+    """
+    Count the words in the titles
+    """
+    # create an empty dictionary to store counted words and its occurrence
     word_count = {}
+
     for title in titles:
-        title = title.lower()
         words = title.split()
 
         for word in words:
