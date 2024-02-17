@@ -3,82 +3,47 @@
 Function to count words in all hot posts of a given Reddit subreddit.
 """
 import requests
-import sys
 
 
-def count_words(subreddit, word_list, instances={}, after="", count=0):
+def count_words(subreddit='funny',
+                word_list=['java', 'Java'],
+                after=None, counts={}):
     """
     Recursive function that queries the Reddit API, parses the title of all
         hot articles, and prints a sorted count of given keywords
     """
-    base_url = "https://www.reddit.com"
+    if not word_list:
+        return
 
-    end_point = f"/r/{subreddit}/hot/.json"
+    url = f"https://www.reddit.com/r/{subreddit}/hot.json"
+    headers = {"User-Agent": "Mozilla/5.0"}
 
-    headers = {"User-Agent": "hp:0x16.api.advanced:v1.0.0"}
+    params = {"limit": 100}
+    if after:
+        params["after"] = after
 
-    params = {
-        "after": after,
-        "count": count,
-        "limit": 100
-    }
-
-    response = requests.get(base_url + end_point,
-                            headers=headers, params=params,
+    response = requests.get(url,
+                            headers=headers,
+                            params=params,
                             allow_redirects=False)
 
-    if response.status_code == 200:
-        data = response.json()
-        if 'after' in data['data']:
-            after = data['data']['after']
-        count = data['data']['dist']
-        posts = data['data']['children']
-
-        title = [post['data']['title'] for post in posts]
-
-        word_count = count_words_in_title(title, word_list)
-
-        for word in word_count:
-            instances[word] = instances.get(word, 0) + word_count[word]
-
-        if after:
-            count_words(subreddit, word_list, instances, after, count)
-        else:
-            sorted_instances = sorted(instances.items(),
-                                      key=lambda item: (-item[1], item[0]))
-            for word, count in sorted_instances:
-                print("{}: {}".format(word, count))
-    else:
-        print()
+    if response.status_code != 200:
         return
 
-    if len(instances) == 0:
-        print()
-        return
+    data = response.json()
+    children = data["data"]["children"]
 
-    return instances
+    for post in children:
+        title = post["data"]["title"].lower()
+        for word in word_list:
+            if word.lower() in title:
+                counts[word] = counts.get(word, 0) + title.count(word.lower())
 
-
-def count_words_in_title(titles, word_list):
-    """
-    Count the words in the titles
-    """
-    # create an empty dictionary to store counted words and its occurrence
-    word_count = {}
-
-    for title in titles:
-        title = title.lower()
-        words = title.split()
-
-        for word in words:
-            if word in word_list:
-                word_count[word] = word_count.get(word, 0) + 1
-    return word_count
-
-
-if __name__ == "__main__":
-    if len(sys.argv) < 3:
-        print("Usage: {} <subreddit> <list of keywords>".format(sys.argv[0]))
-        print("Ex: {} programming 'python java javascript'".format(sys.argv[0]))  # noqa
+    after = data["data"]["after"]
+    if after:
+        count_words(subreddit, word_list, after, counts)
     else:
-        result = count_words(sys.argv[1], [x for x in sys.argv[2].split()])
+        sorted_counts = sorted(counts.items(),
+                               key=lambda x: (-x[1], x[0].lower()))
+        for word, count in sorted_counts:
+            print(f"{word.lower()}: {count}")
