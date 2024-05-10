@@ -16,7 +16,7 @@ touch /etc/nginx/html/index.html
 #  sets the content of the index.html file to "Hello World!" using the echo command.
 echo "Hello World!" > /etc/nginx/html/index.html
 # Sets Nginx to listen on port 80 and serve files from the /etc/nginx/html directory.
-printf %s "server {
+sed -i 's/.*/"server {
      listen      80 default_server;
      listen      [::]:80 default_server;
      root        /etc/nginx/html;
@@ -34,7 +34,7 @@ printf %s "server {
         return 301 https://www.youtube.com/watch?v=QH2-TGUlwu4;
      }
 }
-" > /etc/nginx/sites-available/default
+' /etc/nginx/sites-available/default
 
 # Test Nginx configuration and reload
 sudo nginx -t
