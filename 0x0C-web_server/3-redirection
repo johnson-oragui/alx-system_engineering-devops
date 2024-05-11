@@ -28,6 +28,6 @@ sed -i "/root \;/a\
             return 301 https://google.com;\
         }\
     }" /etc/nginx/sites-available/default
-'
+
 # Restarting nginx
 sudo service nginx restart
