@@ -1,39 +1,36 @@
 #!/usr/bin/env bash
-# configuraing a new ubuntu with nginx installation
-set -euo pipefail  # Enable error checking
+# Configures a new ubuntu machine by installing
+# Nginx where it should be listening on port 80
+# Serve a page that would return a Hello World string
+#
 
-# Check if Nginx is installed, if not, install it
-if ! command -v nginx &>/dev/null; then
-  sudo apt-get update
-  sudo apt-get install -y nginx
-fi
 
-# Create directory and index file if they don't exist
-sudo mkdir -p /etc/nginx/html
-sudo touch /etc/nginx/html/index.html
-sudo chmod 644 /etc/nginx/html/index.html  # Adjust permissions as needed
-sudo echo "Hello World!" | sudo tee /etc/nginx/html/index.html >/dev/null
+echo -e "Updating and installing Nginx.\n"
+sudo apt-get update -y -qq && \
+         sudo apt-get install nginx -y
 
-# Configure Nginx
-sudo tee /etc/nginx/sites-available/default >/dev/null <<EOF
-server {
-    listen 80;
-    listen [::]:80 default_server;
-    root   /etc/nginx/html;
-    index  index.html index.htm;
+echo -e "\nSetting up some minor stuff.\n"
 
-    location /redirect_me {
-        return 301 https://www.google.com/;
-    }
+# starting nginx service
+sudo service nginx start
 
-    location / {
-        try_files \$uri \$uri/ =404;
-    }
-}
-EOF
+# allowing nginx on firewall
+sudo ufw allow 'Nginx HTTP'
 
-# Enable the configuration
-sudo ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
+# Give the user ownership to website files for easy editing
+sudo chown -R "$USER":"$USER" /var/www/html
+sudo chmod -R 755 /var/www
 
-# Restart Nginx
-sudo systemctl restart nginx
+# Backup default index
+cp /var/www/html/index.nginx-debian.html /var/www/html/index.nginx-debian.html.bckp
+
+# Creating new index
+echo -e "Hello World!" > /var/www/html/index.nginx-debian.html
+
+# Setting up /redirect_me to a youtube video
+sudo sed -i '24i\       rewrite ^/redirect_me https://www.youtube.com/watch?v=QH2-TGUlwu4 permanent;' /etc/nginx/sites-available/default
+
+# Restarting nginx
+sudo service nginx restart
+
+echo -e "\nCompleted.\n"
