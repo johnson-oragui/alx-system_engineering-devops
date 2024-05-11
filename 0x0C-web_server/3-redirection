@@ -1,33 +1,26 @@
 #!/usr/bin/env bash
-# Configures a new ubuntu machine by installing nginx
+# Configures an Nginx server so that /redirect_me redirects to another page.
+# The redirection is configured as a "301 Moved Permanently"
 
-sudo apt-get update && sudo apt-get install nginx -y
+apt-get update
+apt-get install -y nginx
 
-# starting nginx service
-sudo service nginx start
+mkdir /etc/nginx/html
+touch /etc/nginx/html/index.html
+echo "Hello World!" > /etc/nginx/html/index.html
+printf %s "server {
+    listen 80;
+    listen [::]:80 default_server;
+    root   /etc/nginx/html;
+    index  index.html index.htm;
 
-# Backup default index
-cp /var/www/html/index.nginx-debian.html /var/www/html/index.nginx-debian.html.bckp
+    location /redirect_me {
+        return 301 https://www.google.com/;
+    }
 
-# Creating new index
-echo -e "Hello World!" > /var/www/html/index.nginx-debian.html
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}" > /etc/nginx/sites-available/default
 
-# Use sed to modify the default configuration
-sed -i "/root \;/a\
-    location / {\
-        root /var/www/html;\
-        index index.nginx-debian.html index.html index.htm;\
-        \
-        # Serve 'Hello World!' for the root path\
-        if (\$uri = '/') {\
-            return 200 'Hello World!';\
-        }\
-        \
-        # Redirect '/redirect_me' to google.com with 301 status\
-        location /redirect_me {\
-            return 301 https://google.com;\
-        }\
-    }" /etc/nginx/sites-available/default
-
-# Restarting nginx
-sudo service nginx restart
+service nginx restart
