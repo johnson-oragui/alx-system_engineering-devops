@@ -1,40 +1,12 @@
 #!/usr/bin/env bash
 # Installs Nginx with the following configurations:
-#+    Listens on port 80.
-#+    Returns a page containing "Hello World!" when queried
-#++    at the root with a curl GET request.
 
 #  updates the package lists for available software packages.
-apt-get update
+sudo apt-get update
 # installs the Nginx web server.
-apt-get install -y nginx
-
-# Creates the /etc/nginx/html directory, which will serve as the document root directory for Nginx.
-mkdir /etc/nginx/html
-#  creates an empty index.html file inside the /etc/nginx/html directory.
-touch /etc/nginx/html/index.html
-#  sets the content of the index.html file to "Hello World!" using the echo command.
-echo "Hello World!" > /etc/nginx/html/index.html
-# Sets Nginx to listen on port 80 and serve files from the /etc/nginx/html directory.
-sed -i "s/.*/\"server {
-     listen      80 default_server;
-     listen      [::]:80 default_server;
-     root        /etc/nginx/html;
-     index       index.html index.htm;
-
-     server_name _;
-
-     location / {
-           # First attempt to serve request as file, then
-           # as directory, then fall back to displaying a 404.
-          try_files \$uri \$uri/ =404;
-     }
-
-     location /redirect_me {
-        return 301 https://www.youtube.com/watch?v=QH2-TGUlwu4;
-     }
-}
-" /etc/nginx/sites-available/default
+sudo apt-get install -y nginx
+sudo sh -c 'echo "Hello World!" > /var/www/html/index.nginx-debian.html'
+sudo sed -i '/^}$/i \ \n\tlocation \/redirect_me {return 301 https:\/\/www.youtube.com\/watch?v=QH2-TGUlwu4;}' /etc/nginx/sites-available/default
 
 # Test Nginx configuration and reload
 sudo nginx -t
