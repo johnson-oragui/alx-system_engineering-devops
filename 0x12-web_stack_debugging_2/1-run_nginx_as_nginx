@@ -1,12 +1,33 @@
-#!/usr/bin/env bash
-# Runs nginx as nginx.
+#!/bin/bash
+# configure Nginx to be running as the nginx user
 
+# stop nginx running
 sudo service nginx stop
-sed -i -E 's/#user.+\;/user nginx;/' /etc/nginx/nginx.conf
-sed -i 's/80/8080/' /etc/nginx/sites-enabled/default
+
+# Set the user to run Nginx as master process
+sed -i 's/#user.+\;\s*.*;/user nginx;/' /etc/nginx/nginx.conf
+
+# Configure /etc/nginx/sites-enabled/default to bind Nginx to port 8080
+sudo sed -i 's/80/8080/' /etc/nginx/sites-enabled/default
+
+# Give /etc/nginx/nginx.conf the permission 644
+chmod 644 /etc/nginx/nginx.conf
+
+# change ownership of nginx server directory to nginx user
 chown nginx:nginx /etc/nginx/ -R
-chmod +rw /etc/nginx/nginx.conf
-for pid in $(pidof apache2); do
-    kill "$pid"
-done
-su -c 'service nginx start' nginx
+
+
+# check for service running on port 8080
+SERVICE=$(lsof -ti :8080)
+
+if [ -n "$SERVICE" ]; then
+    echo "Service running on port 8080, PID: $SERVICE"
+    # Kill the service running on port 8080
+    sudo kill "$SERVICE"
+    echo "Service killed."
+else
+    echo "No service found running on port 8080."
+fi
+
+# restart nginx
+sudo -u nginx service nginx start
