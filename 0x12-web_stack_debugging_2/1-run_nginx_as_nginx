@@ -18,16 +18,9 @@ chown nginx:nginx /etc/nginx/ -R
 
 
 # check for service running on port 8080
-SERVICE=$(lsof -ti :8080)
-
-if [ -n "$SERVICE" ]; then
-    echo "Service running on port 8080, PID: $SERVICE"
-    # Kill the service running on port 8080
-    sudo kill "$SERVICE"
-    echo "Service killed."
-else
-    echo "No service found running on port 8080."
-fi
+for pid in $(pidof apache2); do
+    kill "$pid"
+done
 
 # restart nginx
 sudo -u nginx service nginx start
