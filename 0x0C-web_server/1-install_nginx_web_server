@@ -8,7 +8,7 @@
 # apt-get update
 # installs the Nginx web server.
 apt-get install -y nginx
-
+sudo su
 sudo echo "server {
     listen 80;
     listen [::]:80 default_server;
@@ -20,6 +20,6 @@ sudo echo "server {
     }
 
 }" > /etc/nginx/sites-enabled/default
-
+sudo ubuntu
 # Restarts the Nginx service to apply the configuration changes.
 sudo service nginx restart
