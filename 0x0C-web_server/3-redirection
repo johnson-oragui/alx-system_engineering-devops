@@ -4,33 +4,29 @@
 # Serve a page that would return a Hello World string
 #
 
-
-echo -e "Updating and installing Nginx.\n"
-sudo apt-get update -y -qq && \
-         sudo apt-get install nginx -y
-
-echo -e "\nSetting up some minor stuff.\n"
-
-# starting nginx service
-sudo service nginx start
+#  updates the package lists for available software packages.
+sudo apt-get update
+# installs the Nginx web server.
+sudo apt-get install -y nginx
 
 # allowing nginx on firewall
 sudo ufw allow 'Nginx HTTP'
 
-# Give the user ownership to website files for easy editing
-sudo chown -R "$USER":"$USER" /var/www/html
-sudo chmod -R 755 /var/www
+echo "server {
+    listen 80;
+    listen [::]:80 default_server;
+    root   /var/www/html;
+    index home.html index.htm;
 
-# Backup default index
-cp /var/www/html/index.nginx-debian.html /var/www/html/index.nginx-debian.html.bckp
+    location / {
+        return 200 'Hello World!';
+    }
 
-# Creating new index
-echo -e "Hello World!" > /var/www/html/index.nginx-debian.html
+    location /redirect_me {
+        return 301 https://www.youtube.com/watch?v=QH2-TGUlwu4;
+    }
 
-# Setting up /redirect_me to a youtube video
-sudo sed -i '24i\       rewrite ^/redirect_me https://www.youtube.com/watch?v=QH2-TGUlwu4 permanent;' /etc/nginx/sites-available/default
+}" > /etc/nginx/sites-enabled/default
 
-# Restarting nginx
+# Restarts the Nginx service to apply the configuration changes.
 sudo service nginx restart
-
-echo -e "\nCompleted.\n"
