@@ -9,17 +9,7 @@ apt-get update
 # installs the Nginx web server.
 apt-get install -y nginx
 
-# Sets Nginx to listen on port 80 and serve files from the /etc/nginx/html directory.
-printf %s "server {
-     listen      80 default_server;
-     listen      [::]:80 default_server;
-     root        /var/www/html;
-     index       index.html index.htm;
-     location / {
-          return 200 'Hello World!';
-     }
-}
-" > /etc/nginx/sites-available/default
+sudo sed -i 's|return 200 '\''Hello World!'\'';|try_files $uri $uri/ =404;|g' /etc/nginx/sites-enabled/default
 
 # Restarts the Nginx service to apply the configuration changes.
 service nginx restart
