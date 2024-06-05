@@ -1,16 +1,29 @@
 #!/usr/bin/env bash
 #Install nginx web server and Redirection
-sudo apt-get -y update
-sudo apt-get -y install nginx
-sudo service nginx start
-sudo ufw allow 'Nginx HTTP'
-sudo touch /var/www/html/index.html
-sudo chmod 666 /var/www/html/index.html
-echo "Hello World!" > /var/www/html/index.html
-sudo sed -i '/^}$/i \ \n\tlocation \/redirect_me {\n\t\trewrite ^/redirect_me$ https:\/\/www.youtube.com\/watch?v=QH2-TGUlwu4;\n\t}' /etc/nginx/sites-available/default
-sudo touch /var/www/html/404.html
-sudo chmod 666 /var/www/html/404.html
-echo "Ceci n'est pas une page" > /var/www/html/404.html
-sudo sed -i '/^}$/i \ \n\terror_page 404 /404.html;\n\n\tlocation /404.html {\n\t\tinternal;\n\t}' /etc/nginx/sites-enabled/default
-sudo nginx -t
-sudo service nginx restart
+apt-get update
+apt-get install -y nginx
+
+mkdir /etc/nginx/html
+touch /etc/nginx/html/index.html
+echo "Hello World!" > /etc/nginx/html/index.html
+touch /etc/nginx/html/404.html
+echo "Ceci n'est pas une page" > /etc/nginx/html/404.html
+
+printf %s "server {
+    listen 80;
+    listen [::]:80 default_server;
+    root   /etc/nginx/html;
+    index  index.html index.htm;
+
+    location /redirect_me {
+        return 301 http://google.com/;
+    }
+
+    error_page 404 /404.html;
+    location /404 {
+      root /etc/nginx/html;
+      internal;
+    }
+}" > /etc/nginx/sites-available/default
+
+service nginx restart
