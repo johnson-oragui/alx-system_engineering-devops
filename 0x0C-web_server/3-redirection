@@ -21,9 +21,7 @@ ServerConf="server {
                 try_files \$uri \$uri/ =404;
         }
 
-        if (\$request_filename ~ redirect_me){
-                rewrite ^ https://github.com/emediongfrancis permanent;
-        }
+        rewrite ^/redirect_me https://www.youtube.com/watch?v=QH2-TGUlwu4 permanent;
 }"
 
 sudo bash -c "echo -e '$ServerConf' > /etc/nginx/sites-enabled/default"
