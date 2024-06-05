@@ -6,4 +6,4 @@ sudo ufw allow 'Nginx HTTP'
 sudo touch /var/www/html/index.html
 sudo chmod 666 /var/www/html/index.html
 echo "Hello World!" > /var/www/html/index.html
-service nginx start
+service nginx restart
