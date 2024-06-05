@@ -1,41 +1,9 @@
 #!/usr/bin/env bash
-# Installs Nginx with the following configurations:
-#    Listens on port 80.
-#    Returns a page containing "Hello World!" when queried
-#    at the root with a curl GET request.
-
-#  updates the package lists for available software packages.
-sudo apt-get update
-# installs the Nginx web server.
-sudo apt-get install -y nginx
-
-# allowing nginx on firewall
-sudo ufw allow 'Nginx HTTP'
-
-echo "server {
-    listen 80;
-    listen [::]:80 default_server;
-
-    root   /var/www/html;
-
-    index home.html index.html index.htm;
-
-    server_name _;
-
-    location / {
-            try_files $uri $uri/ =404;
-    }
-
-    location /redirect_me {
-        rewrite ^/redirect_me$ https://www.youtube.com/watch?v=QH2-TGUlwu4 permanent;
-    }
-
-    error_page 404 /404.html;
-
-    location /404.html {
-        internal;
-    }
-}" > /etc/nginx/sites-enabled/default
-
-# Restarts the Nginx service to apply the configuration changes.
-sudo service nginx restart
+#Install nginx web server and Redirection
+sudo apt-get -y update
+sudo apt-get -y install nginx
+sudo sh -c 'echo "Hello World!" > /var/www/html/index.nginx-debian.html'
+sudo sed -i '/^}$/i \ \n\tlocation \/redirect_me {return 301 https:\/\/www.youtube.com\/watch?v=QH2-TGUlwu4;}' /etc/nginx/sites-available/default
+sudo sed -i '/^}$/i \ \n\tlocation @404 {return 404 "Ceci n'\''est pas une page\\n";}' /etc/nginx/sites-available/default
+sudo sed -i 's/=404/@404/g' /etc/nginx/sites-available/default
+sudo service nginx start
