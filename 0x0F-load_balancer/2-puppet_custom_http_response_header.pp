@@ -1,12 +1,4 @@
-#!/usr/bin/env bash
-## Installs Nginx with puppet with the following configurations:
-#+    Listens on port 80.
-#+    Returns a page containing "Hello World!" when queried
-#+     at the root with a curl GET request.
-#+    Configures /redirect_me as a "301 Moved Permanently".
-#+    Includes a custom 404 page containing "Ceci n'est pas une page".
-#+    Contains a custom HTTP header named X-Served-By.
-#+    The value of the HTTP header is the hostname of the running server.
+# Puppet manifest to configure Nginx and HAProxy
 
 package { 'nginx':
   ensure => installed,
@@ -23,7 +15,7 @@ file { '/var/www/html/index.html':
 
 file { '/var/www/html/404.html':
   ensure  => present,
-  content => "Ceci n'est pas une page",
+  content => 'Ceci n\'est pas une page',
 }
 
 file { '/etc/nginx/sites-available/default':
@@ -36,13 +28,10 @@ file { '/etc/nginx/sites-available/default':
       root /var/www/html;
       index index.html index.htm;
 
-      location /redirect_me {
-        return 301 http://cuberule.com/;
-      }
+      rewrite ^/redirect_me$ http://google.com/ permanent;
 
       error_page 404 /404.html;
-      location /404 {
-        root /var/www/html;
+      location = /404.html {
         internal;
       }
     }
@@ -53,4 +42,50 @@ service { 'nginx':
   ensure  => running,
   enable  => true,
   require => File['/etc/nginx/sites-available/default'],
+}
+
+package { 'haproxy':
+  ensure => installed,
+}
+
+file { '/etc/haproxy/haproxy.cfg':
+  ensure  => present,
+  content => '
+    global
+      log /dev/log local0
+      chroot /var/lib/haproxy
+      user haproxy
+      group haproxy
+      daemon
+
+    defaults
+      mode http
+      log global
+      option httplog
+      option dontlognull
+      option redispatch
+      retries 3
+      timeout http-request 10s
+      timeout queue 1m
+      timeout connect 10s
+      timeout client 1m
+      timeout server 1m
+      timeout http-keep-alive 10s
+      timeout check 10s
+
+    frontend http_front
+      bind *:80
+      default_backend Jtechofficial_tech_backend
+
+    backend Jtechofficial_tech_backend
+      balance roundrobin
+      server server1 54.87.224.2:80 check
+      server server2 54.89.109.20:80 check
+  ',
+}
+
+service { 'haproxy':
+  ensure  => running,
+  enable  => true,
+  require => File['/etc/haproxy/haproxy.cfg'],
 }
