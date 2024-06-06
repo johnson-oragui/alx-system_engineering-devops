@@ -1,44 +1,24 @@
-# Puppet manifest to configure Nginx and HAProxy
+# Install nginx and config the custom HTTP header response
+
+exec { 'update':
+  command  => 'sudo apt-get update',
+  provider => shell,
+}
+
 package { 'nginx':
-  ensure => installed,
+  ensure  => installed,
+  require => Exec['update'],
 }
 
-file { '/var/www/html':
-  ensure => directory,
-}
-
-file { '/var/www/html/index.html':
+file_line { 'headercustom':
   ensure  => present,
-  content => 'Hello World!',
-}
-
-file { '/var/www/html/404.html':
-  ensure  => present,
-  content => 'Ceci n\'est pas une page',
-}
-
-file { '/etc/nginx/sites-available/default':
-  ensure  => present,
-  content => '
-    server {
-      listen 80 default_server;
-      listen [::]:80 default_server;
-      add_header X-Served-By $hostname;
-      root /var/www/html;
-      index index.html index.htm;
-
-      rewrite ^/redirect_me$ http://google.com/ permanent;
-
-      error_page 404 /404.html;
-      location = /404.html {
-        internal;
-      }
-    }
-  ',
+  path    => '/etc/nginx/sites-available/default',
+  after   => ':80 default_server;',
+  line    => "add_header X-Served-By ${hostname};",
+  require => Package['nginx'],
 }
 
 service { 'nginx':
   ensure  => running,
-  enable  => true,
-  require => File['/etc/nginx/sites-available/default'],
+  require => File_line['headercustom'],
 }
